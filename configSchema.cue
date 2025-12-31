@@ -1,2 +1,3 @@
-budgetName:          string
-personalAccessToken: string
+budgetName:             string
+personalAccessToken:    string
+categoryGroupWatchlist: list[string]
