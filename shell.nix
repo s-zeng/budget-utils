@@ -2,7 +2,8 @@
 
 pkgs.mkShell {
   buildInputs = with pkgs; [
-        uv
+        cue
+        ty
         python313
         python313Packages.polars
         python313Packages.requests
