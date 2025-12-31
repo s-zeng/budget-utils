@@ -17,12 +17,14 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "polars" },
+    { name = "pydantic" },
     { name = "ynab" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "polars", specifier = ">=1.36.1" },
+    { name = "pydantic", specifier = ">=2.12.5" },
     { name = "ynab", specifier = ">=1.9.0" },
 ]
 
