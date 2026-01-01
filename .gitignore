@@ -3,3 +3,4 @@ secrets.cue
 config.json
 *.egg-info/
 __pycache__
+.hypothesis/

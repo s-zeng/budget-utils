@@ -4,5 +4,5 @@ This file provides guidance to any AI coding assistant (Claude Code, Gemini Code
 
 ## Style
 
-Try to keep the style as functional as possible. Use features like hypothesis testing as often as possible, and always use strict type checking (via `ty`)
+Try to keep the style as functional as possible. Use features like hypothesis testing as often as possible, and always use strict type checking (via `ty`), and linting via `ruff`
 

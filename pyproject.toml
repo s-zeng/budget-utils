@@ -12,6 +12,7 @@ dependencies = [
 
 [project.scripts]
 budget-utils = "budget_utils.cli:main"
+test = "budget_utils.test_runner:main"
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -19,3 +20,13 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.148.9",
+    "pytest>=8.4.2",
+]
+
+[tool.pytest.ini_options]
+addopts = ["--doctest-modules"]
+testpaths = ["tests", "src"]
