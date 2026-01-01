@@ -1,3 +1,5 @@
 .direnv/
 secrets.cue
 config.json
+*.egg-info/
+__pycache__

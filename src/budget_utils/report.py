@@ -1,28 +1,19 @@
-from ynab.models.category import Category
-import ynab
+from __future__ import annotations
+
 import datetime
-import polars as pl
-from ynab.models import BudgetSummary, TransactionDetail, CategoryGroupWithCategories
 from collections.abc import Iterable
+
+import polars as pl
 from pydantic import BaseModel
-from pathlib import Path
-from typing import NewType
+from ynab.models import BudgetSummary, CategoryGroupWithCategories, TransactionDetail
+from ynab.models.category import Category
+
+from .types import CategoryFrame, TransactionFrame, Uuid
 
 
-class Config(BaseModel):
-    budgetName: str
-    personalAccessToken: str
-    categoryGroupWatchList: list[str]
-
-
-Uuid = NewType("Uuid", str)
-TransactionFrame = NewType("TransactionFrame", pl.LazyFrame)
-CategoryFrame = NewType("CategoryFrame", pl.LazyFrame)
-
-
-def get_id(data: Iterable[BudgetSummary], budgetName: str) -> Uuid | None:
+def get_budget_id(data: Iterable[BudgetSummary], budget_name: str) -> Uuid | None:
     for budget_summary in data:
-        if budget_summary.name == budgetName:
+        if budget_summary.name == budget_name:
             return Uuid(budget_summary.id)
     return None
 
@@ -71,16 +62,18 @@ def freeze_model[T: BaseModel](model: T) -> T:
 
 def get_categories_to_watch(
     data: Iterable[CategoryGroupWithCategories],
+    group_watch_list: Iterable[str],
 ) -> set[Category]:
+    groups = set(group_watch_list)
     return {
         freeze_model(category)
         for group in data
         for category in group.categories
-        if group.name in set(config.categoryGroupWatchList) and not category.hidden
+        if group.name in groups and not category.hidden
     }
 
 
-def categories_to_polars(categories: Iterable[Category]) -> pl.LazyFrame:
+def categories_to_polars(categories: Iterable[Category]) -> CategoryFrame:
     return CategoryFrame(
         pl.LazyFrame(
             [
@@ -105,51 +98,18 @@ def categories_to_polars(categories: Iterable[Category]) -> pl.LazyFrame:
     )
 
 
-config = Config.model_validate_json(Path("config.json").read_text())
-
-ynab_config = ynab.Configuration(access_token=config.personalAccessToken)
-
-with ynab.ApiClient(ynab_config) as api_client:
-    budgets_api = ynab.BudgetsApi(api_client)
-    budget_id = get_id(budgets_api.get_budgets().data.budgets, config.budgetName)
-
-    if budget_id is None:
-        raise ValueError(f"no budget found with name {config.budgetName}")
-
-    categories_api = ynab.CategoriesApi(api_client)
-    category_groups = categories_api.get_categories(budget_id).data.category_groups
-    categories_to_watch = get_categories_to_watch(category_groups)
-
-    correct_month_categories = {
-        freeze_model(
-            categories_api.get_month_category_by_id(
-                budget_id=budget_id,
-                month=datetime.date(2025, 12, 25).replace(day=1),
-                category_id=category.id,
-            ).data.category
-        )
-        for category in categories_to_watch
-    }
-
-    categories_budgeted = categories_to_polars(correct_month_categories)
-
-    transactions_api = ynab.TransactionsApi(api_client)
-    transactions = transactions_to_polars(
-        transactions_api.get_transactions(
-            budget_id=budget_id, since_date=datetime.date(2025, 12, 25)
-        ).data.transactions
-    )
+def build_report_table(
+    categories_budgeted: CategoryFrame,
+    transactions: TransactionFrame,
+    category_names: set[str],
+) -> pl.LazyFrame:
     total_spent = (
-        transactions.filter(
-            pl.col("category_name").is_in(
-                {category.name for category in correct_month_categories}
-            )
-        )
+        transactions.filter(pl.col("category_name").is_in(category_names))
         .group_by("category_name")
         .agg(pl.col("amount").sum().alias("spent"))
     )
 
-    report_table = (
+    return (
         categories_budgeted.join(total_spent, on="category_name", how="left")
         .with_columns(pl.col("spent").fill_null(0))
         .select(
@@ -162,5 +122,3 @@ with ynab.ApiClient(ynab_config) as api_client:
         )
         .sort("category_group_name", "category_name")
     )
-
-    print(report_table.collect())

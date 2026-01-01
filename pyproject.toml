@@ -9,3 +9,13 @@ dependencies = [
     "pydantic>=2.12.5",
     "ynab>=1.9.0",
 ]
+
+[project.scripts]
+budget-utils = "budget_utils.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
