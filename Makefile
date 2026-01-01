@@ -9,4 +9,4 @@ clean:
 verify:
 	ruff check
 	ty check
-	uv run test
+	uv run pytest

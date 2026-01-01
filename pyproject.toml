@@ -12,7 +12,6 @@ dependencies = [
 
 [project.scripts]
 budget-utils = "budget_utils.cli:main"
-test = "budget_utils.test_runner:main"
 
 [build-system]
 requires = ["setuptools>=68"]
