@@ -6,3 +6,7 @@ This file provides guidance to any AI coding assistant (Claude Code, Gemini Code
 
 Try to keep the style as functional as possible. Use features like hypothesis testing as often as possible, and always use strict type checking (via `ty`), and linting via `ruff`
 
+## Checks
+
+Run `make verify` after every change and ensure that all checks pass
+
