@@ -77,3 +77,12 @@ def month_weeks(year: int, month: int) -> list[MonthWeek]:
     return [
         week for week in partition_year_into_month_weeks(year) if week.month == month
     ]
+
+
+def month_week_for_date(day: dt.date) -> MonthWeek:
+    """Return the MonthWeek segment that contains the provided date."""
+    for week in month_weeks(day.year, day.month):
+        if week.week_start <= day <= week.week_end:
+            return week
+    msg = f"Date {day.isoformat()} not found in month weeks for {day.year}-{day.month:02d}"
+    raise ValueError(msg)

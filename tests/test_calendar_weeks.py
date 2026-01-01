@@ -48,3 +48,11 @@ def test_week_invariants(year: int, month: int) -> None:
         assert all(day.year == year for day in days)
         assert all(day.month == month for day in days)
         assert days[-1] - days[0] == dt.timedelta(days=len(days) - 1)
+
+
+@given(st.dates(min_value=dt.date(1900, 1, 1), max_value=dt.date(2100, 12, 31)))
+def test_month_week_for_date_contains_date(day: dt.date) -> None:
+    week = calendar_weeks.month_week_for_date(day)
+    assert week.month == day.month
+    assert week.week_start <= day <= week.week_end
+    assert week in calendar_weeks.month_weeks(day.year, day.month)
