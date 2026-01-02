@@ -78,7 +78,7 @@ def main() -> None:
         print(
             f"Week {week_number} of {week_year}, starting on {start_label} and ending on {end_label}"
         )
-        with pl.Config(tbl_rows=-1):
+        with pl.Config(tbl_rows=-1, tbl_formatting="ASCII_FULL"):
             print(report_table.collect())
 
 
