@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import datetime
 from pathlib import Path
+from typing import assert_never
 
 import polars as pl
 import ynab
 
 from .calendar_weeks import month_week_for_date
-from .config import load_config
+from .config import CsvOutput, load_config
 from .report import (
     build_report_table,
     categories_to_polars,
@@ -78,8 +79,18 @@ def main() -> None:
         print(
             f"Week {week_number} of {week_year}, starting on {start_label} and ending on {end_label}"
         )
-        with pl.Config(tbl_rows=-1, tbl_formatting="ASCII_FULL"):
-            print(report_table.collect())
+        match config.output_format:
+            case "polars_print":
+                with pl.Config(tbl_rows=-1, tbl_formatting="ASCII_FULL"):
+                    print(report_table.collect())
+            case "csv_print":
+                csv_text = report_table.collect().write_csv()
+                print(csv_text, end="")
+            case CsvOutput():
+                csv_text = report_table.collect().write_csv()
+                config.output_format.csv_output.write_text(csv_text)
+            case _:
+                assert_never(config.output_format)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,19 @@ def _read_golden(name: str) -> str:
     return (Path(__file__).with_name("golden") / name).read_text()
 
 
+def _make_config(*, output_format: object | None = None) -> Config:
+    payload: dict[str, object] = {
+        "budgetName": "Test Budget",
+        "personalAccessToken": "token",
+        "categoryGroupWatchList": ["Essentials", "Fun"],
+        "resolution_date": dt.date(2024, 3, 13),
+        "showAllRows": False,
+    }
+    if output_format is not None:
+        payload["outputFormat"] = output_format
+    return Config.model_validate(payload)
+
+
 def _make_categories() -> dict[str, models.Category]:
     groceries = models.Category(
         id="cat-groceries",
@@ -156,20 +169,13 @@ def _make_transactions() -> list[models.TransactionDetail]:
     ]
 
 
-def test_main_golden_output(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def _run_main(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    config: Config,
+) -> str:
     categories = _make_categories()
     transactions = _make_transactions()
-    resolution_date = dt.date(2024, 3, 13)
-
-    config = Config.model_validate(
-        {
-            "budgetName": "Test Budget",
-            "personalAccessToken": "token",
-            "categoryGroupWatchList": ["Essentials", "Fun"],
-            "resolution_date": resolution_date,
-            "showAllRows": False,
-        }
-    )
 
     class FakeApiClient:
         def __init__(self, configuration: ynab.Configuration) -> None:
@@ -250,5 +256,31 @@ def test_main_golden_output(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Capt
     monkeypatch.setattr(ynab, "TransactionsApi", FakeTransactionsApi)
 
     cli.main()
-    captured = capsys.readouterr().out
+    return capsys.readouterr().out
+
+
+def test_main_golden_output(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    config = _make_config(output_format="polars_print")
+    captured = _run_main(monkeypatch, capsys, config)
     assert captured == _read_golden("main_output.txt")
+
+
+def test_main_golden_output_csv_print(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    config = _make_config(output_format="csv_print")
+    captured = _run_main(monkeypatch, capsys, config)
+    assert captured == _read_golden("main_output_csv_print.txt")
+
+
+def test_main_golden_output_csv_output(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "report.csv"
+    config = _make_config(output_format={"csv_output": str(output_path)})
+    captured = _run_main(monkeypatch, capsys, config)
+    assert captured == _read_golden("main_output_csv_output.txt")
+    assert output_path.read_text() == _read_golden("main_output_csv.txt")

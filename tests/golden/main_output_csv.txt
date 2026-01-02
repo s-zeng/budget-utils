@@ -1,0 +1,3 @@
+category_group_name,category_name,budgeted,spent,balance,goal_cadence
+Essentials,Groceries,50.0,-12.5,30.0,monthly
+Fun,Games,20.0,-3.0,15.0,monthly

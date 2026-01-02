@@ -2,8 +2,18 @@ from __future__ import annotations
 
 import datetime
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, Field
+
+
+class CsvOutput(BaseModel):
+    csv_output: Path = Field(alias="csv_output")
+
+    model_config = {"populate_by_name": True}
+
+
+OutputFormat = Literal["polars_print", "csv_print"] | CsvOutput
 
 
 class Config(BaseModel):
@@ -12,6 +22,7 @@ class Config(BaseModel):
     category_group_watch_list: list[str] = Field(alias="categoryGroupWatchList")
     resolution_date: datetime.date | None = Field(default=None, alias="resolution_date")
     show_all_rows: bool = Field(default=False, alias="showAllRows")
+    output_format: OutputFormat = Field(default="polars_print", alias="outputFormat")
 
     model_config = {"populate_by_name": True}
 
