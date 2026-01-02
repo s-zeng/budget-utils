@@ -56,3 +56,14 @@ def test_month_week_for_date_contains_date(day: dt.date) -> None:
     assert week.month == day.month
     assert week.week_start <= day <= week.week_end
     assert week in calendar_weeks.month_weeks(day.year, day.month)
+
+
+@given(st.integers(min_value=1900, max_value=2100))
+def test_week_number_matches_partition_order(year: int) -> None:
+    weeks = list(calendar_weeks.partition_year_into_month_weeks(year))
+    year_anchor = dt.date(year, 1, 1) - dt.timedelta(
+        days=(dt.date(year, 1, 1).weekday() + 1) % 7
+    )
+    for week in weeks:
+        anchor = week.week_start - dt.timedelta(days=(week.week_start.weekday() + 1) % 7)
+        assert week.week_number == (anchor - year_anchor).days // 7 + 1

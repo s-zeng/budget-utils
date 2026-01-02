@@ -7,10 +7,11 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
-class MonthWeek:
+class _MonthWeek:
     month: int
     week_start: dt.date
     week_end: dt.date
+    week_number: int
 
     def __iter__(self) -> Iterator[dt.date]:
         days = (self.week_end - self.week_start).days
@@ -20,6 +21,7 @@ class MonthWeek:
                 for offset in range(days + 1)
             )
         )
+
 
 
 def _previous_sunday(day: dt.date) -> dt.date:
@@ -34,7 +36,7 @@ def _split_by_month(days: Iterable[dt.date]) -> list[int]:
     return sorted({day.month for day in days})
 
 
-def partition_year_into_month_weeks(year: int) -> Iterator[MonthWeek]:
+def partition_year_into_month_weeks(year: int) -> Iterator[_MonthWeek]:
     """Partition a calendar year into Sunday-Saturday weeks split at month edges.
 
     Weeks are anchored to Sunday-Saturday ranges, but any week that spans a month
@@ -58,28 +60,31 @@ def partition_year_into_month_weeks(year: int) -> Iterator[MonthWeek]:
     week_start = _previous_sunday(first_day)
     last_week_end = _previous_sunday(last_day) + dt.timedelta(days=6)
 
+    week_number = 1
     while week_start <= last_week_end:
         week_end = week_start + dt.timedelta(days=6)
         in_year_days = [day for day in _week_days(week_start) if day.year == year]
         for month in _split_by_month(in_year_days):
             month_first = dt.date(year, month, 1)
             month_last = dt.date(year, month, calendar.monthrange(year, month)[1])
-            yield MonthWeek(
+            yield _MonthWeek(
                 month=month,
                 week_start=max(week_start, month_first),
                 week_end=min(week_end, month_last),
+                week_number=week_number,
             )
         week_start += dt.timedelta(days=7)
+        week_number += 1
 
 
-def month_weeks(year: int, month: int) -> list[MonthWeek]:
+def month_weeks(year: int, month: int) -> list[_MonthWeek]:
     """Filter a year's partition down to weeks for a specific month."""
     return [
         week for week in partition_year_into_month_weeks(year) if week.month == month
     ]
 
 
-def month_week_for_date(day: dt.date) -> MonthWeek:
+def month_week_for_date(day: dt.date) -> _MonthWeek:
     """Return the MonthWeek segment that contains the provided date."""
     for week in month_weeks(day.year, day.month):
         if week.week_start <= day <= week.week_end:
