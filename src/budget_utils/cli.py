@@ -5,6 +5,7 @@ from pathlib import Path
 
 import ynab
 
+from .calendar_weeks import month_week_for_date
 from .config import load_config
 from .report import (
     build_report_table,
@@ -35,12 +36,13 @@ def main() -> None:
             config.category_group_watch_list,
         )
 
-        report_month = datetime.date(2025, 12, 25).replace(day=1)
+        resolution_date = config.resolution_date or datetime.date.today()
+        report_start = month_week_for_date(resolution_date).week_start
         correct_month_categories = {
             freeze_model(
                 categories_api.get_month_category_by_id(
                     budget_id=budget_id,
-                    month=report_month,
+                    month=report_start,
                     category_id=category.id,
                 ).data.category
             )
@@ -53,7 +55,7 @@ def main() -> None:
         transactions = transactions_to_polars(
             transactions_api.get_transactions(
                 budget_id=budget_id,
-                since_date=datetime.date(2025, 12, 25),
+                since_date=report_start,
             ).data.transactions
         )
 

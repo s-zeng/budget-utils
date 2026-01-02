@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from pathlib import Path
 
 from pydantic import BaseModel, Field
@@ -9,6 +10,7 @@ class Config(BaseModel):
     budget_name: str = Field(alias="budgetName")
     personal_access_token: str = Field(alias="personalAccessToken")
     category_group_watch_list: list[str] = Field(alias="categoryGroupWatchList")
+    resolution_date: datetime.date | None = Field(default=None, alias="resolution_date")
 
     model_config = {"populate_by_name": True}
 

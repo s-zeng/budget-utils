@@ -31,7 +31,12 @@ def transactions_to_polars(data: Iterable[TransactionDetail]) -> TransactionFram
                 for transaction in data
             ],
             orient="row",
-            schema=("date", "amount", "payee_name", "category_name"),
+            schema={
+                "date": pl.Date,
+                "amount": pl.Float64,
+                "payee_name": pl.String,
+                "category_name": pl.String,
+            },
         )
     )
 
