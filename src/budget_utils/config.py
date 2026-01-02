@@ -11,6 +11,7 @@ class Config(BaseModel):
     personal_access_token: str = Field(alias="personalAccessToken")
     category_group_watch_list: list[str] = Field(alias="categoryGroupWatchList")
     resolution_date: datetime.date | None = Field(default=None, alias="resolution_date")
+    show_all_rows: bool = Field(default=False, alias="showAllRows")
 
     model_config = {"populate_by_name": True}
 

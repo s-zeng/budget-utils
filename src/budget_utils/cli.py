@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime
 from pathlib import Path
 
+import polars as pl
 import ynab
 
 from .calendar_weeks import month_week_for_date
@@ -37,7 +38,9 @@ def main() -> None:
         )
 
         resolution_date = config.resolution_date or datetime.date.today()
-        report_start = month_week_for_date(resolution_date).week_start
+        report_week = month_week_for_date(resolution_date)
+        report_start = report_week.week_start
+        report_end = report_week.week_end
         correct_month_categories = {
             freeze_model(
                 categories_api.get_month_category_by_id(
@@ -65,7 +68,18 @@ def main() -> None:
             {category.name for category in correct_month_categories},
         )
 
-        print(report_table.collect())
+        if not config.show_all_rows:
+            report_table = report_table.filter(pl.col("spent") != 0)
+
+        week_year = report_week.week_start.year
+        week_number = report_week.week_number
+        start_label = report_start.strftime("%A %Y-%m-%d")
+        end_label = report_end.strftime("%A %Y-%m-%d")
+        print(
+            f"Week {week_number} of {week_year}, starting on {start_label} and ending on {end_label}"
+        )
+        with pl.Config(tbl_rows=-1):
+            print(report_table.collect())
 
 
 if __name__ == "__main__":
