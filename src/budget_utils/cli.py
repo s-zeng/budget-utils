@@ -81,7 +81,7 @@ def main() -> None:
         )
         match config.output_format:
             case "polars_print":
-                with pl.Config(tbl_rows=-1, tbl_formatting="ASCII_FULL"):
+                with pl.Config(tbl_rows=-1):
                     print(report_table.collect())
             case "csv_print":
                 csv_text = report_table.collect().write_csv()
