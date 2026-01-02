@@ -47,7 +47,7 @@ def relevant_transactions(
     end_date: datetime.date,
 ) -> TransactionFrame:
     return TransactionFrame(
-        df.filter(pl.col("date") < end_date).filter(pl.col("date") > start_date)
+        df.filter(pl.col("date") <= end_date).filter(pl.col("date") >= start_date)
     )
 
 

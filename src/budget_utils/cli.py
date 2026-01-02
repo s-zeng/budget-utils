@@ -15,6 +15,7 @@ from .report import (
     freeze_model,
     get_budget_id,
     get_categories_to_watch,
+    relevant_transactions,
     transactions_to_polars,
 )
 
@@ -26,7 +27,9 @@ def main() -> None:
 
     with ynab.ApiClient(ynab_config) as api_client:
         budgets_api = ynab.BudgetsApi(api_client)
-        budget_id = get_budget_id(budgets_api.get_budgets().data.budgets, config.budget_name)
+        budget_id = get_budget_id(
+            budgets_api.get_budgets().data.budgets, config.budget_name
+        )
 
         if budget_id is None:
             raise ValueError(f"no budget found with name {config.budget_name}")
@@ -62,6 +65,7 @@ def main() -> None:
                 since_date=report_start,
             ).data.transactions
         )
+        transactions = relevant_transactions(transactions, report_start, report_end)
 
         report_table = build_report_table(
             categories_budgeted,
