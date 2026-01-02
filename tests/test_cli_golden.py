@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import os
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,17 @@ from budget_utils.config import Config
 
 def _read_golden(name: str) -> str:
     return (Path(__file__).with_name("golden") / name).read_text()
+
+
+def _write_golden(name: str, content: str) -> None:
+    (Path(__file__).with_name("golden") / name).write_text(content)
+
+
+def _assert_golden(name: str, content: str) -> None:
+    if os.getenv("UPDATE_GOLDENS") == "1":
+        _write_golden(name, content)
+        return
+    assert content == _read_golden(name)
 
 
 def _make_config(*, output_format: object | None = None) -> Config:
@@ -262,7 +274,7 @@ def _run_main(
 def test_main_golden_output(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     config = _make_config(output_format="polars_print")
     captured = _run_main(monkeypatch, capsys, config)
-    assert captured == _read_golden("main_output.txt")
+    _assert_golden("main_output.txt", captured)
 
 
 def test_main_golden_output_csv_print(
@@ -271,7 +283,7 @@ def test_main_golden_output_csv_print(
 ) -> None:
     config = _make_config(output_format="csv_print")
     captured = _run_main(monkeypatch, capsys, config)
-    assert captured == _read_golden("main_output_csv_print.txt")
+    _assert_golden("main_output_csv_print.txt", captured)
 
 
 def test_main_golden_output_csv_output(
@@ -282,5 +294,5 @@ def test_main_golden_output_csv_output(
     output_path = tmp_path / "report.csv"
     config = _make_config(output_format={"csv_output": str(output_path)})
     captured = _run_main(monkeypatch, capsys, config)
-    assert captured == _read_golden("main_output_csv_output.txt")
-    assert output_path.read_text() == _read_golden("main_output_csv.txt")
+    _assert_golden("main_output_csv_output.txt", captured)
+    _assert_golden("main_output_csv.txt", output_path.read_text())
