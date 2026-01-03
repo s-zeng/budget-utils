@@ -10,6 +10,7 @@ import ynab
 from .calendar_weeks import month_week_for_date
 from .config import CsvOutput, load_config
 from .report import (
+    build_category_group_totals_table,
     build_report_table,
     categories_to_polars,
     freeze_model,
@@ -75,6 +76,7 @@ def main() -> None:
 
         if not config.show_all_rows:
             report_table = report_table.filter(pl.col("spent") != 0)
+        category_group_totals = build_category_group_totals_table(report_table)
 
         week_year = report_week.week_start.year
         week_number = report_week.week_number
@@ -87,12 +89,23 @@ def main() -> None:
             case "polars_print":
                 with pl.Config(tbl_rows=-1):
                     print(report_table.collect())
+                    print("Category group totals")
+                    print(category_group_totals.collect())
             case "csv_print":
                 csv_text = report_table.collect().write_csv()
+                totals_text = category_group_totals.collect().write_csv()
                 print(csv_text, end="")
+                print("category_group_totals")
+                print(totals_text, end="")
             case CsvOutput():
                 csv_text = report_table.collect().write_csv()
-                config.output_format.csv_output.write_text(csv_text)
+                totals_text = category_group_totals.collect().write_csv()
+                output_path = config.output_format.csv_output
+                totals_path = output_path.with_name(
+                    f"{output_path.stem}_category_group_totals{output_path.suffix}"
+                )
+                output_path.write_text(csv_text)
+                totals_path.write_text(totals_text)
             case _:
                 assert_never(config.output_format)
 

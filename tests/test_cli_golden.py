@@ -292,7 +292,9 @@ def test_main_golden_output_csv_output(
     tmp_path: Path,
 ) -> None:
     output_path = tmp_path / "report.csv"
+    totals_path = tmp_path / "report_category_group_totals.csv"
     config = _make_config(output_format={"csv_output": str(output_path)})
     captured = _run_main(monkeypatch, capsys, config)
     _assert_golden("main_output_csv_output.txt", captured)
     _assert_golden("main_output_csv.txt", output_path.read_text())
+    _assert_golden("main_output_csv_totals.txt", totals_path.read_text())

@@ -127,3 +127,16 @@ def build_report_table(
         )
         .sort("category_group_name", "category_name")
     )
+
+
+def build_category_group_totals_table(report_table: pl.LazyFrame) -> pl.LazyFrame:
+    return (
+        report_table.group_by("category_group_name")
+        .agg(
+            pl.col("budgeted").sum().alias("budgeted"),
+            pl.col("spent").sum().alias("spent"),
+            pl.col("balance").sum().alias("balance"),
+        )
+        .select("category_group_name", "budgeted", "spent", "balance")
+        .sort("category_group_name")
+    )
