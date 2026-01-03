@@ -8,7 +8,7 @@ import polars as pl
 import ynab
 
 from .calendar_weeks import month_week_for_date
-from .config import CsvOutput, load_config
+from .config import CsvOutput, VisualOutput, load_config
 from .report import (
     build_category_group_totals_table,
     build_report_table,
@@ -19,6 +19,7 @@ from .report import (
     relevant_transactions,
     transactions_to_polars,
 )
+from .visual_report import build_visual_report_html
 
 
 def main() -> None:
@@ -85,6 +86,11 @@ def main() -> None:
         print(
             f"Week {week_number} of {week_year}, starting on {start_label} and ending on {end_label}"
         )
+        week_short_start = report_start.strftime("%b %d").replace(" 0", " ")
+        week_short_end = report_end.strftime("%b %d").replace(" 0", " ")
+        visual_week_label = (
+            f"Week {week_number} ({week_short_start} - {week_short_end})"
+        )
         match config.output_format:
             case "polars_print":
                 with pl.Config(tbl_rows=-1):
@@ -106,6 +112,15 @@ def main() -> None:
                 )
                 output_path.write_text(csv_text)
                 totals_path.write_text(totals_text)
+            case VisualOutput():
+                html_text = build_visual_report_html(
+                    report_table,
+                    group_colors=config.category_group_watch_list,
+                    week_label=visual_week_label,
+                    planned_year=week_year,
+                )
+                output_path = config.output_format.visual_output
+                output_path.write_text(html_text)
             case _:
                 assert_never(config.output_format)
 

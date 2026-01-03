@@ -326,3 +326,15 @@ def test_main_golden_output_csv_output(
     _assert_golden("main_output_csv_output.txt", captured)
     _assert_golden("main_output_csv.txt", output_path.read_text())
     _assert_golden("main_output_csv_totals.txt", totals_path.read_text())
+
+
+def test_main_golden_output_visual_output(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path,
+) -> None:
+    output_path = tmp_path / "report.html"
+    config = _make_config(output_format={"visual_output": str(output_path)})
+    captured = _run_main(monkeypatch, capsys, config)
+    _assert_golden("main_output_visual_output.txt", captured)
+    _assert_golden("main_output_visual.html", output_path.read_text())

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import datetime
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
 import polars as pl
 from pydantic import BaseModel
@@ -67,7 +67,7 @@ def freeze_model[T: BaseModel](model: T) -> T:
 
 def get_categories_to_watch(
     data: Iterable[CategoryGroupWithCategories],
-    group_watch_list: Iterable[str],
+    group_watch_list: Mapping[str, str],
 ) -> set[Category]:
     groups = set(group_watch_list)
     return {

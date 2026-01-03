@@ -13,13 +13,19 @@ class CsvOutput(BaseModel):
     model_config = {"populate_by_name": True}
 
 
-OutputFormat = Literal["polars_print", "csv_print"] | CsvOutput
+class VisualOutput(BaseModel):
+    visual_output: Path = Field(alias="visual_output")
+
+    model_config = {"populate_by_name": True}
+
+
+OutputFormat = Literal["polars_print", "csv_print"] | CsvOutput | VisualOutput
 
 
 class Config(BaseModel):
     budget_name: str = Field(alias="budgetName")
     personal_access_token: str = Field(alias="personalAccessToken")
-    category_group_watch_list: list[str] = Field(alias="categoryGroupWatchList")
+    category_group_watch_list: dict[str, str] = Field(alias="categoryGroupWatchList")
     resolution_date: datetime.date | None = Field(default=None, alias="resolution_date")
     show_all_rows: bool = Field(default=False, alias="showAllRows")
     output_format: OutputFormat = Field(default="polars_print", alias="outputFormat")
