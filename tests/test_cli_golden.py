@@ -28,7 +28,9 @@ def _assert_golden(name: str, content: str) -> None:
     assert content == _read_golden(name)
 
 
-def _make_config(*, output_format: object | None = None) -> Config:
+def _make_config(
+    *, output_format: object | None = None, show_all_rows: bool = False
+) -> Config:
     payload: dict[str, object] = {
         "budgetName": "Test Budget",
         "personalAccessToken": "token",
@@ -37,7 +39,7 @@ def _make_config(*, output_format: object | None = None) -> Config:
             "Fun": "#f4dccb",
         },
         "resolution_date": dt.date(2024, 3, 13),
-        "showAllRows": False,
+        "showAllRows": show_all_rows,
     }
     if output_format is not None:
         payload["outputFormat"] = output_format
@@ -126,7 +128,34 @@ def _make_categories() -> dict[str, models.Category]:
         goal_snoozed_at=None,
         deleted=False,
     )
-    return {category.id: category for category in (groceries, rent, games)}
+    books = models.Category(
+        id="cat-books",
+        category_group_id="group-fun",
+        category_group_name="Fun",
+        name="Books",
+        hidden=False,
+        original_category_group_id=None,
+        note=None,
+        budgeted=10000,
+        activity=0,
+        balance=10000,
+        goal_type=None,
+        goal_needs_whole_amount=None,
+        goal_day=None,
+        goal_cadence=1,
+        goal_cadence_frequency=None,
+        goal_creation_month=None,
+        goal_target=None,
+        goal_target_month=None,
+        goal_percentage_complete=None,
+        goal_months_to_budget=None,
+        goal_under_funded=None,
+        goal_overall_funded=None,
+        goal_overall_left=None,
+        goal_snoozed_at=None,
+        deleted=False,
+    )
+    return {category.id: category for category in (groceries, rent, games, books)}
 
 
 def _make_transactions() -> list[models.TransactionDetail]:
@@ -256,7 +285,7 @@ def _run_main(
                 name="Fun",
                 hidden=False,
                 deleted=False,
-                categories=[categories["cat-games"]],
+                categories=[categories["cat-books"], categories["cat-games"]],
             )
             data = models.CategoriesResponseData(
                 category_groups=[group_essentials, group_fun],
@@ -340,7 +369,9 @@ def test_main_golden_output_visual_output(
     tmp_path: Path,
 ) -> None:
     output_path = tmp_path / "report.html"
-    config = _make_config(output_format={"visual_output": str(output_path)})
+    config = _make_config(
+        output_format={"visual_output": str(output_path)}, show_all_rows=True
+    )
     captured = _run_main(monkeypatch, capsys, config)
     _assert_golden("main_output_visual_output.txt", captured)
     _assert_golden("main_output_visual.html", output_path.read_text())
