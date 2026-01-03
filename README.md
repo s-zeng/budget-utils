@@ -1,8 +1,10 @@
 ## budget-utils
 
 Weekly budget reporting helper for YNAB. It pulls categories and transactions,
-calculates weekly spend against planned amounts, and outputs either a printable
+calculates weekly spend against planned amounts, and outputs either a printed
 table, CSV, or a styled HTML report.
+
+Please see the files in tests/golden/ to see sample outputs
 
 ## Requirements
 
@@ -31,7 +33,7 @@ budget-utils
 `config.json` is required at the repository root.
 
 If you prefer CUE, edit `secrets.cue` (for the token, budget name, and
-categories) and `config.cue` (for defaults), then run:
+categories) and `config.cue` (for other settings), then run:
 
 ```bash
 make config.json
