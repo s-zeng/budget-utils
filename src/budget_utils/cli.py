@@ -75,9 +75,10 @@ def main() -> None:
             {category.name for category in correct_month_categories},
         )
 
+        report_table_full = report_table
         if not config.show_all_rows:
             report_table = report_table.filter(pl.col("spent") != 0)
-        category_group_totals = build_category_group_totals_table(report_table)
+        category_group_totals = build_category_group_totals_table(report_table_full)
 
         week_year = report_week.week_start.year
         week_number = report_week.week_number
@@ -114,10 +115,11 @@ def main() -> None:
                 totals_path.write_text(totals_text)
             case VisualOutput():
                 html_text = build_visual_report_html(
-                    report_table,
+                    report_table_full,
                     group_colors=config.category_group_watch_list,
                     week_label=visual_week_label,
                     planned_year=week_year,
+                    show_all_rows=config.show_all_rows,
                 )
                 output_path = config.output_format.visual_output
                 output_path.write_text(html_text)
