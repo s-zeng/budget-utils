@@ -1,8 +1,9 @@
 Week 11 of 2024, starting on Sunday 2024-03-10 and ending on Saturday 2024-03-16
 category_group_name,category_name,budgeted,spent,balance,goal_cadence
 Essentials,Groceries,50.0,-12.5,30.0,monthly
+Essentials,Rent,100.0,-25.0,100.0,annual
 Fun,Games,20.0,-3.0,15.0,monthly
 category_group_totals
 category_group_name,budgeted,spent,balance
-Essentials,50.0,-12.5,30.0
+Essentials,150.0,-37.5,130.0
 Fun,20.0,-3.0,15.0
