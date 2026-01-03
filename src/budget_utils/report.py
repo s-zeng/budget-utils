@@ -87,7 +87,9 @@ def categories_to_polars(categories: Iterable[Category]) -> CategoryFrame:
                     category.category_group_name,
                     category.budgeted / 1000,
                     category.balance / 1000,
-                    "monthly" if category.goal_cadence == 1 else "annual",
+                    "monthly"
+                    if category.goal_target is not None and category.goal_cadence == 1
+                    else "annual",
                 )
                 for category in categories
             ],
