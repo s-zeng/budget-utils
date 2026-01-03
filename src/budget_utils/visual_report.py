@@ -331,7 +331,9 @@ def _row_html(
     if is_annual:
         annual_style = f' style="background-color: {_darken_hex(color, factor=0.7)};"'
     remaining_value = (
-        "" if not show_values else _format_currency(remaining, show_zero=show_values)
+        ""
+        if is_total or not show_values
+        else _format_currency(remaining, show_zero=show_values)
     )
 
     return "\n".join(

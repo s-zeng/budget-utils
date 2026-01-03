@@ -253,7 +253,18 @@ def test_visual_report_totals_include_hidden_balance() -> None:
     assert f"{Currency}840.00" in html
     assert f"{Currency}70.00" in html
     assert f"{Currency}10.00" in html
-    assert f"{Currency}60.00" in html
+    expected_total_row = "\n".join(
+        [
+            '      <tr class="total" style="background-color: #bdc4d0;">',
+            "        <td>Total Essentials</td>",
+            f'        <td class="number">{Currency}840.00</td>',
+            f'        <td class="number">{Currency}70.00</td>',
+            f'        <td class="number">{Currency}10.00</td>',
+            '        <td class="number"></td>',
+            "      </tr>",
+        ]
+    )
+    assert expected_total_row in html
 
 
 def test_visual_report_hides_remaining_when_spent_blank() -> None:
