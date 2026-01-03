@@ -25,7 +25,9 @@ def test_partition_covers_year(year: int) -> None:
     assert set(days) == _year_dates(year)
 
 
-@given(st.integers(min_value=1900, max_value=2100), st.integers(min_value=1, max_value=12))
+@given(
+    st.integers(min_value=1900, max_value=2100), st.integers(min_value=1, max_value=12)
+)
 def test_month_partition_covers_month(year: int, month: int) -> None:
     weeks = calendar_weeks.month_weeks(year, month)
     days = [day for week in weeks for day in week]
@@ -33,7 +35,9 @@ def test_month_partition_covers_month(year: int, month: int) -> None:
     assert set(days) == _month_dates(year, month)
 
 
-@given(st.integers(min_value=1900, max_value=2100), st.integers(min_value=1, max_value=12))
+@given(
+    st.integers(min_value=1900, max_value=2100), st.integers(min_value=1, max_value=12)
+)
 def test_week_invariants(year: int, month: int) -> None:
     weeks = calendar_weeks.month_weeks(year, month)
     month_last = calendar.monthrange(year, month)[1]
@@ -65,5 +69,7 @@ def test_week_number_matches_partition_order(year: int) -> None:
         days=(dt.date(year, 1, 1).weekday() + 1) % 7
     )
     for week in weeks:
-        anchor = week.week_start - dt.timedelta(days=(week.week_start.weekday() + 1) % 7)
+        anchor = week.week_start - dt.timedelta(
+            days=(week.week_start.weekday() + 1) % 7
+        )
         assert week.week_number == (anchor - year_anchor).days // 7 + 1

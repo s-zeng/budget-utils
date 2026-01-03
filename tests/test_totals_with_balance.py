@@ -139,7 +139,9 @@ def _run_main(
 
         def get_budgets(self) -> models.BudgetSummaryResponse:
             budget = models.BudgetSummary(id="budget-123", name="Test Budget")
-            data = models.BudgetSummaryResponseData(budgets=[budget], default_budget=None)
+            data = models.BudgetSummaryResponseData(
+                budgets=[budget], default_budget=None
+            )
             return models.BudgetSummaryResponse(data=data)
 
     class FakeCategoriesApi:
@@ -185,7 +187,9 @@ def _run_main(
         ) -> models.TransactionsResponse:
             assert budget_id == "budget-123"
             assert since_date == dt.date(2024, 3, 10)
-            data = models.TransactionsResponseData(transactions=transactions, server_knowledge=1)
+            data = models.TransactionsResponseData(
+                transactions=transactions, server_knowledge=1
+            )
             return models.TransactionsResponse(data=data)
 
     monkeypatch.setattr(cli, "load_config", lambda _: config)
@@ -250,3 +254,40 @@ def test_visual_report_totals_include_hidden_balance() -> None:
     assert f"{Currency}70.00" in html
     assert f"{Currency}10.00" in html
     assert f"{Currency}60.00" in html
+
+
+def test_visual_report_hides_remaining_when_spent_blank() -> None:
+    report_table = pl.LazyFrame(
+        [
+            ("Zero Spend", "Essentials", 50.0, 0.0, 50.0, "monthly"),
+        ],
+        orient="row",
+        schema=(
+            "category_name",
+            "category_group_name",
+            "budgeted",
+            "spent",
+            "balance",
+            "goal_cadence",
+        ),
+    )
+    html = build_visual_report_html(
+        report_table,
+        group_colors={"Essentials": "#dfe7f5"},
+        week_label="Week 1",
+        planned_year=2024,
+        show_all_rows=True,
+    )
+
+    expected_row = "\n".join(
+        [
+            '      <tr class="group" style="background-color: #dfe7f5;">',
+            "        <td>Zero Spend</td>",
+            f'        <td class="number">{Currency}600.00</td>',
+            f'        <td class="number">{Currency}50.00</td>',
+            '        <td class="number"></td>',
+            '        <td class="number"></td>',
+            "      </tr>",
+        ]
+    )
+    assert expected_row in html

@@ -23,7 +23,6 @@ class _MonthWeek:
         )
 
 
-
 def _previous_sunday(day: dt.date) -> dt.date:
     return day - dt.timedelta(days=(day.weekday() + 1) % 7)
 

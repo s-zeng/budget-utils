@@ -233,7 +233,9 @@ def _run_main(
 
         def get_budgets(self) -> models.BudgetSummaryResponse:
             budget = models.BudgetSummary(id="budget-123", name="Test Budget")
-            data = models.BudgetSummaryResponseData(budgets=[budget], default_budget=None)
+            data = models.BudgetSummaryResponseData(
+                budgets=[budget], default_budget=None
+            )
             return models.BudgetSummaryResponse(data=data)
 
     class FakeCategoriesApi:
@@ -286,7 +288,9 @@ def _run_main(
         ) -> models.TransactionsResponse:
             assert budget_id == "budget-123"
             assert since_date == dt.date(2024, 3, 10)
-            data = models.TransactionsResponseData(transactions=transactions, server_knowledge=1)
+            data = models.TransactionsResponseData(
+                transactions=transactions, server_knowledge=1
+            )
             return models.TransactionsResponse(data=data)
 
     monkeypatch.setattr(cli, "load_config", lambda _: config)
@@ -299,7 +303,9 @@ def _run_main(
     return capsys.readouterr().out
 
 
-def test_main_golden_output(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+def test_main_golden_output(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
     config = _make_config(output_format="polars_print")
     captured = _run_main(monkeypatch, capsys, config)
     _assert_golden("main_output.txt", captured)
