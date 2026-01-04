@@ -12,38 +12,18 @@ from .types import CategoryFrame, TransactionFrame, Uuid
 
 
 def get_budget_id(data: Iterable[BudgetSummary], budget_name: str) -> Uuid | None:
-    for budget_summary in data:
-        if budget_summary.name == budget_name:
-            return Uuid(budget_summary.id)
-    return None
+    return next(
+        (
+            Uuid(budget_summary.id)
+            for budget_summary in data
+            if budget_summary.name == budget_name
+        ),
+        None,
+    )
 
 
 def transactions_to_polars(data: Iterable[TransactionDetail]) -> TransactionFrame:
-    rows: list[tuple[datetime.date, float, str | None, str]] = []
-    for transaction in data:
-        if transaction.subtransactions:
-            for subtransaction in transaction.subtransactions:
-                if subtransaction.category_name is None:
-                    continue
-                rows.append(
-                    (
-                        transaction.var_date,
-                        subtransaction.amount / 1000,
-                        subtransaction.payee_name or transaction.payee_name,
-                        subtransaction.category_name,
-                    )
-                )
-            continue
-        if transaction.category_name is None:
-            continue
-        rows.append(
-            (
-                transaction.var_date,
-                transaction.amount / 1000,
-                transaction.payee_name,
-                transaction.category_name,
-            )
-        )
+    rows = [row for transaction in data for row in _transaction_rows(transaction)]
     return TransactionFrame(
         pl.LazyFrame(
             rows,
@@ -55,6 +35,32 @@ def transactions_to_polars(data: Iterable[TransactionDetail]) -> TransactionFram
                 "category_name": pl.String,
             },
         )
+    )
+
+
+def _transaction_rows(
+    transaction: TransactionDetail,
+) -> Iterable[tuple[datetime.date, float, str | None, str]]:
+    if transaction.subtransactions:
+        return (
+            (
+                transaction.var_date,
+                subtransaction.amount / 1000,
+                subtransaction.payee_name or transaction.payee_name,
+                subtransaction.category_name,
+            )
+            for subtransaction in transaction.subtransactions
+            if subtransaction.category_name is not None
+        )
+    if transaction.category_name is None:
+        return ()
+    return (
+        (
+            transaction.var_date,
+            transaction.amount / 1000,
+            transaction.payee_name,
+            transaction.category_name,
+        ),
     )
 
 

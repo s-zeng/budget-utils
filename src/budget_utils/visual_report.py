@@ -57,47 +57,35 @@ def build_visual_report_html(
         if group_df.is_empty():
             continue
 
-        planned_values: list[float] = []
-        per_month_values: list[float] = []
-        spent_values: list[float] = []
-        remaining_values: list[float] = []
+        group_values_df = _with_value_columns(group_df)
+        display_values_df = _with_value_columns(display_group_df)
+        group_totals = group_values_df.select(
+            pl.col("planned").sum().alias("planned"),
+            pl.col("per_month").sum().alias("per_month"),
+            pl.col("spent").sum().alias("spent"),
+            pl.col("remaining").sum().alias("remaining"),
+        ).to_dicts()[0]
+        group_planned = float(group_totals["planned"])
+        group_per_month = float(group_totals["per_month"])
+        group_spent = float(group_totals["spent"])
+        group_remaining = float(group_totals["remaining"])
 
-        for row in group_df.iter_rows(named=True):
-            planned, per_month, spent, remaining, _ = _row_values(row)
+        total_planned += group_planned
+        total_per_month += group_per_month
+        total_spent += group_spent
+        total_remaining += group_remaining
 
-            total_planned += planned
-            total_per_month += per_month
-            total_spent += spent
-            total_remaining += remaining
-
-            planned_values.append(planned)
-            per_month_values.append(per_month)
-            spent_values.append(spent)
-            remaining_values.append(remaining)
-
-        for row in display_group_df.iter_rows(named=True):
-            planned, per_month, spent, remaining, is_annual = _row_values(row)
-            rows.append(
-                _row_html(
-                    category=row["category_name"],
-                    planned=planned,
-                    per_month=per_month,
-                    spent=spent,
-                    remaining=remaining,
-                    color=color,
-                    is_total=False,
-                    show_period_values=spent != 0,
-                    is_annual=is_annual,
-                )
-            )
-
+        rows.extend(
+            _row_html_from_row(row=row, color=color)
+            for row in display_values_df.iter_rows(named=True)
+        )
         rows.append(
             _row_html(
                 category=f"Total {group_name}",
-                planned=sum(planned_values),
-                per_month=sum(per_month_values),
-                spent=sum(spent_values),
-                remaining=sum(remaining_values),
+                planned=group_planned,
+                per_month=group_per_month,
+                spent=group_spent,
+                remaining=group_remaining,
                 color=_darken_hex(color),
                 is_total=True,
                 show_period_values=True,
@@ -300,16 +288,36 @@ def build_visual_report_html(
     )
 
 
-def _row_values(
-    row: Mapping[str, float | str],
-) -> tuple[float, float, float, float, bool]:
-    cadence = str(row["goal_cadence"])
-    budgeted = float(row["budgeted"])
-    planned = budgeted if cadence == "annual" else budgeted * 12
-    per_month = planned / 12
+def _with_value_columns(frame: pl.DataFrame) -> pl.DataFrame:
+    is_annual = pl.col("goal_cadence") == "annual"
+    planned = (
+        pl.when(is_annual).then(pl.col("budgeted")).otherwise(pl.col("budgeted") * 12)
+    )
+    return frame.with_columns(
+        planned=planned,
+        per_month=planned / 12,
+        remaining=pl.col("budgeted") + pl.col("spent"),
+        is_annual=is_annual,
+    )
+
+
+def _row_html_from_row(*, row: Mapping[str, float | str | bool], color: str) -> str:
+    planned = float(row["planned"])
+    per_month = float(row["per_month"])
     spent = float(row["spent"])
-    remaining = budgeted + spent
-    return planned, per_month, spent, remaining, cadence == "annual"
+    remaining = float(row["remaining"])
+    is_annual = bool(row["is_annual"])
+    return _row_html(
+        category=str(row["category_name"]),
+        planned=planned,
+        per_month=per_month,
+        spent=spent,
+        remaining=remaining,
+        color=color,
+        is_total=False,
+        show_period_values=spent != 0,
+        is_annual=is_annual,
+    )
 
 
 def _row_html(

@@ -35,6 +35,24 @@ def _split_by_month(days: Iterable[dt.date]) -> list[int]:
     return sorted({day.month for day in days})
 
 
+def _month_week(
+    *,
+    year: int,
+    month: int,
+    week_start: dt.date,
+    week_end: dt.date,
+    week_number: int,
+) -> _MonthWeek:
+    month_first = dt.date(year, month, 1)
+    month_last = dt.date(year, month, calendar.monthrange(year, month)[1])
+    return _MonthWeek(
+        month=month,
+        week_start=max(week_start, month_first),
+        week_end=min(week_end, month_last),
+        week_number=week_number,
+    )
+
+
 def partition_year_into_month_weeks(year: int) -> Iterator[_MonthWeek]:
     """Partition a calendar year into Sunday-Saturday weeks split at month edges.
 
@@ -56,24 +74,24 @@ def partition_year_into_month_weeks(year: int) -> Iterator[_MonthWeek]:
     """
     first_day = dt.date(year, 1, 1)
     last_day = dt.date(year, 12, 31)
-    week_start = _previous_sunday(first_day)
+    anchor_week_start = _previous_sunday(first_day)
     last_week_end = _previous_sunday(last_day) + dt.timedelta(days=6)
 
-    week_number = 1
-    while week_start <= last_week_end:
+    weeks = (
+        anchor_week_start + dt.timedelta(days=7 * offset)
+        for offset in range(((last_week_end - anchor_week_start).days // 7) + 1)
+    )
+    for week_number, week_start in enumerate(weeks, start=1):
         week_end = week_start + dt.timedelta(days=6)
         in_year_days = [day for day in _week_days(week_start) if day.year == year]
         for month in _split_by_month(in_year_days):
-            month_first = dt.date(year, month, 1)
-            month_last = dt.date(year, month, calendar.monthrange(year, month)[1])
-            yield _MonthWeek(
+            yield _month_week(
+                year=year,
                 month=month,
-                week_start=max(week_start, month_first),
-                week_end=min(week_end, month_last),
+                week_start=week_start,
+                week_end=week_end,
                 week_number=week_number,
             )
-        week_start += dt.timedelta(days=7)
-        week_number += 1
 
 
 def month_weeks(year: int, month: int) -> list[_MonthWeek]:
@@ -85,8 +103,15 @@ def month_weeks(year: int, month: int) -> list[_MonthWeek]:
 
 def month_week_for_date(day: dt.date) -> _MonthWeek:
     """Return the MonthWeek segment that contains the provided date."""
-    for week in month_weeks(day.year, day.month):
-        if week.week_start <= day <= week.week_end:
-            return week
+    week = next(
+        (
+            week
+            for week in month_weeks(day.year, day.month)
+            if week.week_start <= day <= week.week_end
+        ),
+        None,
+    )
+    if week is not None:
+        return week
     msg = f"Date {day.isoformat()} not found in month weeks for {day.year}-{day.month:02d}"
     raise ValueError(msg)
