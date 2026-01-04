@@ -24,6 +24,8 @@ where = ["src"]
 dev = [
     "hypothesis>=6.148.9",
     "pytest>=8.4.2",
+    "ty",
+    "ruff"
 ]
 
 [tool.pytest.ini_options]
