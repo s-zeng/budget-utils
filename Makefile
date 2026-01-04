@@ -7,9 +7,9 @@ clean:
 	rm -f config.json
 
 verify:
-	ruff format --check
+	uv tool run ruff format --check
 	cue fmt --check
-	ruff check
+	uv tool run ruff check
 	uv tool run ty check
 	uv run pytest
 
