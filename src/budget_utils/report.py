@@ -19,17 +19,34 @@ def get_budget_id(data: Iterable[BudgetSummary], budget_name: str) -> Uuid | Non
 
 
 def transactions_to_polars(data: Iterable[TransactionDetail]) -> TransactionFrame:
+    rows: list[tuple[datetime.date, float, str | None, str]] = []
+    for transaction in data:
+        if transaction.subtransactions:
+            for subtransaction in transaction.subtransactions:
+                if subtransaction.category_name is None:
+                    continue
+                rows.append(
+                    (
+                        transaction.var_date,
+                        subtransaction.amount / 1000,
+                        subtransaction.payee_name or transaction.payee_name,
+                        subtransaction.category_name,
+                    )
+                )
+            continue
+        if transaction.category_name is None:
+            continue
+        rows.append(
+            (
+                transaction.var_date,
+                transaction.amount / 1000,
+                transaction.payee_name,
+                transaction.category_name,
+            )
+        )
     return TransactionFrame(
         pl.LazyFrame(
-            [
-                (
-                    transaction.var_date,
-                    transaction.amount / 1000,
-                    transaction.payee_name,
-                    transaction.category_name,
-                )
-                for transaction in data
-            ],
+            rows,
             orient="row",
             schema={
                 "date": pl.Date,

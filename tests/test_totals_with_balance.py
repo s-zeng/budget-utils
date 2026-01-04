@@ -116,6 +116,63 @@ def _make_transactions() -> list[models.TransactionDetail]:
     ]
 
 
+def _make_split_transactions() -> list[models.TransactionDetail]:
+    return [
+        models.TransactionDetail(
+            id="txn-2",
+            date=dt.date(2024, 3, 11),
+            amount=-20000,
+            memo=None,
+            cleared=TransactionClearedStatus.CLEARED,
+            approved=True,
+            flag_color=None,
+            flag_name=None,
+            account_id="acc-1",
+            payee_id=None,
+            category_id=None,
+            transfer_account_id=None,
+            transfer_transaction_id=None,
+            matched_transaction_id=None,
+            import_id=None,
+            import_payee_name=None,
+            import_payee_name_original=None,
+            debt_transaction_type=None,
+            deleted=False,
+            account_name="Checking",
+            payee_name="Market",
+            category_name="Split",
+            subtransactions=[
+                models.SubTransaction(
+                    id="sub-1",
+                    transaction_id="txn-2",
+                    amount=-12500,
+                    memo=None,
+                    payee_id=None,
+                    payee_name=None,
+                    category_id="cat-groceries",
+                    category_name="Groceries",
+                    transfer_account_id=None,
+                    transfer_transaction_id=None,
+                    deleted=False,
+                ),
+                models.SubTransaction(
+                    id="sub-2",
+                    transaction_id="txn-2",
+                    amount=-7500,
+                    memo=None,
+                    payee_id=None,
+                    payee_name=None,
+                    category_id="cat-savings",
+                    category_name="Savings",
+                    transfer_account_id=None,
+                    transfer_transaction_id=None,
+                    deleted=False,
+                ),
+            ],
+        ),
+    ]
+
+
 def _run_main(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -222,6 +279,24 @@ def test_category_group_totals_include_balance_without_spending(
     assert row["budgeted"] == pytest.approx(70.0)
     assert row["spent"] == pytest.approx(-12.5)
     assert row["balance"] == pytest.approx(120.0)
+
+
+def test_split_transactions_are_counted_per_category() -> None:
+    categories = _make_categories()
+    transactions = _make_split_transactions()
+    categories_budgeted = cli.categories_to_polars(categories.values())
+    category_names = {category.name for category in categories.values()}
+    transactions_frame = cli.transactions_to_polars(transactions)
+
+    report_table = cli.build_report_table(
+        categories_budgeted, transactions_frame, category_names
+    ).collect()
+
+    groceries = report_table.filter(pl.col("category_name") == "Groceries").to_dicts()
+    savings = report_table.filter(pl.col("category_name") == "Savings").to_dicts()
+
+    assert groceries[0]["spent"] == pytest.approx(-12.5)
+    assert savings[0]["spent"] == pytest.approx(-7.5)
 
 
 def test_visual_report_totals_include_hidden_balance() -> None:

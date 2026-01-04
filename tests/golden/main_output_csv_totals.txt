@@ -1,4 +1,4 @@
 category_group_name,budgeted,spent,balance
-Essentials,150.0,-37.5,112.5
-Fun,30.0,-3.0,25.0
-Total,180.0,-40.5,137.5
+Essentials,150.0,-43.5,106.5
+Fun,30.0,-7.0,23.0
+Total,180.0,-50.5,129.5
