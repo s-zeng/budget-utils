@@ -7,8 +7,10 @@ clean:
 	rm -f config.json
 
 verify:
+	ruff format --check
+	cue fmt --check
 	ruff check
-	ty check
+	uv tool run ty check
 	uv run pytest
 
 update-goldens:
