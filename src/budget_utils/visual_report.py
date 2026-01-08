@@ -296,7 +296,7 @@ def _with_value_columns(frame: pl.DataFrame) -> pl.DataFrame:
     return frame.with_columns(
         planned=planned,
         per_month=planned / 12,
-        remaining=pl.col("budgeted") + pl.col("spent"),
+        remaining=pl.col("balance"),
         is_annual=is_annual,
     )
 
