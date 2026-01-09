@@ -1,8 +1,14 @@
 [
   {
-    "label": "make verify",
+    "label": "Verify",
     "command": "make",
     "args": ["verify"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+  },
+  {
+    "label": "Run",
+    "command": "uv",
+    "args": ["run", "budget-utils"],
     "cwd": "$ZED_WORKTREE_ROOT",
   },
 ]
