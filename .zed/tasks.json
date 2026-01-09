@@ -1,0 +1,8 @@
+[
+  {
+    "label": "make verify",
+    "command": "make",
+    "args": ["verify"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+  },
+]
