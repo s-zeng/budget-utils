@@ -27,6 +27,16 @@ DATES: SearchStrategy[dt.date] = st.dates(
 )
 
 
+def _category_group(name: str) -> models.CategoryGroupWithCategories:
+    return models.CategoryGroupWithCategories(
+        id=f"group-{name}",
+        name=name,
+        hidden=False,
+        deleted=False,
+        categories=[],
+    )
+
+
 def _category_frame(
     rows: list[tuple[str, str, float, float, str]],
 ) -> CategoryFrame:
@@ -60,6 +70,20 @@ def _transaction_frame(
             },
         )
     )
+
+
+@given(
+    st.sets(SHORT_TEXT, min_size=0, max_size=8),
+    st.sets(SHORT_TEXT, min_size=0, max_size=8),
+)
+def test_get_missing_category_groups(
+    group_names: set[str],
+    watch_names: set[str],
+) -> None:
+    groups = [_category_group(name) for name in group_names]
+    watch_list = {name: "#ffffff" for name in watch_names}
+    missing = report.get_missing_category_groups(groups, watch_list)
+    assert missing == watch_names.difference(group_names)
 
 
 @st.composite

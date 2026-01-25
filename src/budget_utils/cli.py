@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import warnings
 from pathlib import Path
 from typing import assert_never
 
@@ -16,6 +17,7 @@ from .report import (
     freeze_model,
     get_budget_id,
     get_categories_to_watch,
+    get_missing_category_groups,
     relevant_transactions,
     transactions_to_polars,
 )
@@ -38,6 +40,15 @@ def main() -> None:
 
         categories_api = ynab.CategoriesApi(api_client)
         category_groups = categories_api.get_categories(budget_id).data.category_groups
+        missing_groups = get_missing_category_groups(
+            category_groups,
+            config.category_group_watch_list,
+        )
+        if missing_groups:
+            missing_names = ", ".join(sorted(missing_groups))
+            warnings.warn(
+                f"categoryGroupWatchList includes unknown category groups: {missing_names}"
+            )
         categories_to_watch = get_categories_to_watch(
             category_groups,
             config.category_group_watch_list,

@@ -101,6 +101,14 @@ def get_categories_to_watch(
     }
 
 
+def get_missing_category_groups(
+    data: Iterable[CategoryGroupWithCategories],
+    group_watch_list: Mapping[str, str],
+) -> set[str]:
+    available = {group.name for group in data}
+    return set(group_watch_list).difference(available)
+
+
 def categories_to_polars(categories: Iterable[Category]) -> CategoryFrame:
     return CategoryFrame(
         pl.LazyFrame(
